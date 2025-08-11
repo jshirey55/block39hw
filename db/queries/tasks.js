@@ -22,3 +22,28 @@ export async function getTasks(){
     const { rows: tasks } = await db.query(SQL)
     return tasks
 }
+
+export async function getTaskById(id) {
+  const SQL = `
+  SELECT *
+  FROM tasks
+  WHERE id = $1
+  `;
+  const {
+    rows: [task],
+  } = await db.query(SQL, [id]);
+  return task;
+}
+
+export async function updateTask(id, { title, done }) {
+ const SQL =`
+ UPDATE tasks
+ SET title = $2, done = $3
+ WHERE id = $1
+ RETURNING *
+ `;
+ const { 
+    rows: [task],
+} = await db.query(SQL, [id, title, done])
+return task
+}
