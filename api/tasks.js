@@ -2,7 +2,7 @@ import express from "express";
 const router = express.Router();
 export default router;
 
-import { createTask, getTaskById, getTasks, updateTask } from "#db/queries/tasks"
+import { createTask, getTaskById, getTasks, updateTask, deleteTask } from "#db/queries/tasks"
 import requireBody from "#middleware/requireBody"
 import requireUser from "#middleware/requireUser"
 import { createToken } from "#utils/jwt";
@@ -27,21 +27,39 @@ router
 })
 
 router
-    .route("/:id")
-    .patch(async (req, res) => {
-        const { id } = req.params
+  .route("/:id")
+  .put(async (req, res) => {
+    const { id } = req.params;
 
-        const task = await getTaskById(id)
-        console.log("PATCH /tasks/:id", {id, userId: req.user?.id, task})
-        if (!task) {
-            return res.status(404).send("Task not found")
-        }
-        
-        if (task.user_id !== req.user.id) {
-            return res.status(403).send("You don't own this task")
-        }
+    const task = await getTaskById(id);
 
-        const { title, done } = req.body
-        const updatedTask = await updateTask(id, { title, done })
-        res.status(200).send(updatedTask)
-    })
+    if (!task) {
+      return res.status(404).send("Task not found");
+    }
+
+    if (req.user.id !== task.user_id) {
+      return res.status(403).send("You don't own this task");
+    }
+
+    const { title, done } = req.body;
+    const updatedTask = await updateTask(id, { title, done });
+    res.status(200).send(updatedTask);
+  });
+
+router
+  .route("/:id")
+  .delete(async (req, res) => {
+    const { id } = req.params
+
+    const task = await getTaskById(id)
+    if (!task) {
+      return res.status(404).send("You don't own this task")
+    }
+
+    if (req.user.id !== task.user_id) {
+      return res.status(403).send("You don't own this task")
+    }
+
+    await deleteTask(id)
+    res.status(204).send()
+  })

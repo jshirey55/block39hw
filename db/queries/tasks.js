@@ -47,3 +47,15 @@ export async function updateTask(id, { title, done }) {
 } = await db.query(SQL, [id, title, done])
 return task
 }
+
+export async function deleteTask(id) {
+    const SQL =`
+    DELETE tasks
+    WHERE id = $1
+    RETURNING *
+    `;
+    const {
+        rows: [task],
+    } = await db.query(SQL, [id])
+    return task
+}
